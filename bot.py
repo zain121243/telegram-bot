@@ -6,20 +6,22 @@ from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTyp
 # جلب التوكن من Railway
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# معالجة الفيديو
+# 🎬 معالجة الفيديو (شعار متحرك + شفاف + وسط)
 async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         file = await update.message.video.get_file()
         await file.download_to_drive("input.mp4")
 
-        result = subprocess.run(
-            'ffmpeg -i input.mp4 -i logo.png -filter_complex "overlay=10:10" -y output.mp4',
-            shell=True,
-            capture_output=True,
-            text=True
-        )
+        cmd = '''
+        ffmpeg -i input.mp4 -i logo.png -filter_complex "
+        [1:v]scale=200:-1,format=rgba,colorchannelmixer=aa=0.0,
+        fade=t=in:st=0:d=2:alpha=1[logo];
+        [0:v][logo]overlay=(W-w)/2:(H-h)/2:format=auto
+        " -y output.mp4
+        '''
 
-        # إذا ffmpeg فشل
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
         if result.returncode != 0:
             await update.message.reply_text("خطأ ffmpeg:\n" + result.stderr)
             return
@@ -33,20 +35,22 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"خطأ:\n{e}")
 
-# معالجة الصور
+
+# 🖼 معالجة الصور (شعار بالمنتصف + شفاف)
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         file = await update.message.photo[-1].get_file()
         await file.download_to_drive("input.jpg")
 
-        result = subprocess.run(
-            'ffmpeg -i input.jpg -i logo.png -filter_complex "overlay=10:10" -y output.jpg',
-            shell=True,
-            capture_output=True,
-            text=True
-        )
+        cmd = '''
+        ffmpeg -i input.jpg -i logo.png -filter_complex "
+        [1:v]scale=200:-1,format=rgba,colorchannelmixer=aa=0.5[logo];
+        [0:v][logo]overlay=(W-w)/2:(H-h)/2
+        " -y output.jpg
+        '''
 
-        # إذا ffmpeg فشل
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
         if result.returncode != 0:
             await update.message.reply_text("خطأ ffmpeg:\n" + result.stderr)
             return
@@ -59,6 +63,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         await update.message.reply_text(f"خطأ:\n{e}")
+
 
 # تشغيل البوت
 app = ApplicationBuilder().token(BOT_TOKEN).build()
