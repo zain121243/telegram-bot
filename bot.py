@@ -36,7 +36,7 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"خطأ:\n{e}")
 
 
-# 🖼 معالجة الصور (شعار بالمنتصف + شفاف)
+# 🖼 معالجة الصور (شعار بالمنتصف + شفاف + حل مشكلة JPG)
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         file = await update.message.photo[-1].get_file()
@@ -44,9 +44,10 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         cmd = '''
         ffmpeg -i input.jpg -i logo.png -filter_complex "
+        [0:v]format=rgba[base];
         [1:v]scale=200:-1,format=rgba,colorchannelmixer=aa=0.5[logo];
-        [0:v][logo]overlay=(W-w)/2:(H-h)/2
-        " -y output.jpg
+        [base][logo]overlay=(W-w)/2:(H-h)/2
+        " -y output.png
         '''
 
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
@@ -55,11 +56,11 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("خطأ ffmpeg:\n" + result.stderr)
             return
 
-        if not os.path.exists("output.jpg"):
+        if not os.path.exists("output.png"):
             await update.message.reply_text("ما تم إنشاء الصورة ❌")
             return
 
-        await update.message.reply_photo(photo=open("output.jpg", "rb"))
+        await update.message.reply_photo(photo=open("output.png", "rb"))
 
     except Exception as e:
         await update.message.reply_text(f"خطأ:\n{e}")
