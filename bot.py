@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 
 # جلب التوكن من Railway
-BOT_TOKEN = os.getenv("")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file = await update.message.video.get_file()
