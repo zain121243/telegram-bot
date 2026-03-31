@@ -5,18 +5,22 @@ from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTyp
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# 🎬 فيديو
+# 🎬 معالجة الفيديو (متوافق مع تيليغرام)
 async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         file = await update.message.video.get_file()
         await file.download_to_drive("input.mp4")
 
-        cmd = 'ffmpeg -i input.mp4 -i logo.png -filter_complex "[1:v]scale=200:-1,format=rgba,colorchannelmixer=aa=0.5[logo];[0:v][logo]overlay=(W-w)/2:(H-h)/2" -y output.mp4'
+        cmd = 'ffmpeg -i input.mp4 -i logo.png -filter_complex "[1:v]scale=200:-1,format=rgba,colorchannelmixer=aa=0.5[logo];[0:v][logo]overlay=(W-w)/2:(H-h)/2" -c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p -c:a copy -y output.mp4'
 
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
         if result.returncode != 0:
-            await update.message.reply_text(result.stderr)
+            await update.message.reply_text("خطأ:\n" + result.stderr)
+            return
+
+        if not os.path.exists("output.mp4"):
+            await update.message.reply_text("ما تم إنشاء الفيديو ❌")
             return
 
         await update.message.reply_video(video=open("output.mp4", "rb"))
@@ -25,7 +29,7 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(str(e))
 
 
-# 🖼 صورة (نسخة مستقرة جدًا)
+# 🖼 معالجة الصور (شعار بالمنتصف + شفاف)
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         file = await update.message.photo[-1].get_file()
@@ -36,7 +40,11 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
         if result.returncode != 0:
-            await update.message.reply_text(result.stderr)
+            await update.message.reply_text("خطأ:\n" + result.stderr)
+            return
+
+        if not os.path.exists("output.jpg"):
+            await update.message.reply_text("ما تم إنشاء الصورة ❌")
             return
 
         await update.message.reply_photo(photo=open("output.jpg", "rb"))
@@ -45,6 +53,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(str(e))
 
 
+# تشغيل البوت
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 
 app.add_handler(MessageHandler(filters.VIDEO, handle_video))
