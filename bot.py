@@ -12,7 +12,6 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file = await update.message.video.get_file()
         await file.download_to_drive("input.mp4")
 
-        # تشغيل ffmpeg مع إظهار الخطأ
         result = subprocess.run(
             'ffmpeg -i input.mp4 -i logo.png -filter_complex "[0:v][1:v] overlay=W-w-10:H-h-10" -y output.mp4',
             shell=True,
@@ -21,6 +20,11 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         print(result.stderr)
+
+        # تحقق من إنشاء الملف
+        if not os.path.exists("output.mp4"):
+            await update.message.reply_text("فشل ffmpeg ❌\n" + result.stderr)
+            return
 
         await update.message.reply_video(video=open("output.mp4", "rb"))
 
@@ -42,6 +46,11 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         print(result.stderr)
+
+        # تحقق من إنشاء الملف
+        if not os.path.exists("output.jpg"):
+            await update.message.reply_text("فشل ffmpeg ❌\n" + result.stderr)
+            return
 
         await update.message.reply_photo(photo=open("output.jpg", "rb"))
 
