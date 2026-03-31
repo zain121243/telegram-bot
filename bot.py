@@ -13,23 +13,24 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await file.download_to_drive("input.mp4")
 
         result = subprocess.run(
-            'ffmpeg -i input.mp4 -i logo.png -filter_complex "[0:v][1:v] overlay=W-w-10:H-h-10" -y output.mp4',
+            'ffmpeg -i input.mp4 -i logo.png -filter_complex "overlay=10:10" -y output.mp4',
             shell=True,
             capture_output=True,
             text=True
         )
 
-        print(result.stderr)
+        # إذا ffmpeg فشل
+        if result.returncode != 0:
+            await update.message.reply_text("خطأ ffmpeg:\n" + result.stderr)
+            return
 
-        # تحقق من إنشاء الملف
         if not os.path.exists("output.mp4"):
-            await update.message.reply_text("فشل ffmpeg ❌\n" + result.stderr)
+            await update.message.reply_text("ما تم إنشاء الفيديو ❌")
             return
 
         await update.message.reply_video(video=open("output.mp4", "rb"))
 
     except Exception as e:
-        print("ERROR:", e)
         await update.message.reply_text(f"خطأ:\n{e}")
 
 # معالجة الصور
@@ -39,23 +40,24 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await file.download_to_drive("input.jpg")
 
         result = subprocess.run(
-            'ffmpeg -i input.jpg -i logo.png -filter_complex "[0:v][1:v] overlay=W-w-10:H-h-10" -y output.jpg',
+            'ffmpeg -i input.jpg -i logo.png -filter_complex "overlay=10:10" -y output.jpg',
             shell=True,
             capture_output=True,
             text=True
         )
 
-        print(result.stderr)
+        # إذا ffmpeg فشل
+        if result.returncode != 0:
+            await update.message.reply_text("خطأ ffmpeg:\n" + result.stderr)
+            return
 
-        # تحقق من إنشاء الملف
         if not os.path.exists("output.jpg"):
-            await update.message.reply_text("فشل ffmpeg ❌\n" + result.stderr)
+            await update.message.reply_text("ما تم إنشاء الصورة ❌")
             return
 
         await update.message.reply_photo(photo=open("output.jpg", "rb"))
 
     except Exception as e:
-        print("ERROR:", e)
         await update.message.reply_text(f"خطأ:\n{e}")
 
 # تشغيل البوت
