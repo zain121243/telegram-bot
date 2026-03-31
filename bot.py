@@ -1,4 +1,5 @@
 import os
+import subprocess
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 
@@ -11,14 +12,21 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file = await update.message.video.get_file()
         await file.download_to_drive("input.mp4")
 
-        # إضافة الشعار على الفيديو
-        os.system('ffmpeg -i input.mp4 -i logo.png -filter_complex "overlay=W-w-10:H-h-10" -y output.mp4')
+        # تشغيل ffmpeg مع إظهار الخطأ
+        result = subprocess.run(
+            'ffmpeg -i input.mp4 -i logo.png -filter_complex "[0:v][1:v] overlay=W-w-10:H-h-10" -y output.mp4',
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+
+        print(result.stderr)
 
         await update.message.reply_video(video=open("output.mp4", "rb"))
 
     except Exception as e:
         print("ERROR:", e)
-        await update.message.reply_text("صار خطأ ⚠️")
+        await update.message.reply_text(f"خطأ:\n{e}")
 
 # معالجة الصور
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -26,14 +34,20 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file = await update.message.photo[-1].get_file()
         await file.download_to_drive("input.jpg")
 
-        # إضافة الشعار على الصورة
-        os.system('ffmpeg -i input.jpg -i logo.png -filter_complex "overlay=W-w-10:H-h-10" -y output.jpg')
+        result = subprocess.run(
+            'ffmpeg -i input.jpg -i logo.png -filter_complex "[0:v][1:v] overlay=W-w-10:H-h-10" -y output.jpg',
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+
+        print(result.stderr)
 
         await update.message.reply_photo(photo=open("output.jpg", "rb"))
 
     except Exception as e:
         print("ERROR:", e)
-        await update.message.reply_text("صار خطأ ⚠️")
+        await update.message.reply_text(f"خطأ:\n{e}")
 
 # تشغيل البوت
 app = ApplicationBuilder().token(BOT_TOKEN).build()
