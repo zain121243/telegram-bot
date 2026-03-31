@@ -8,13 +8,12 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 # 🎬 معالجة الفيديو
 async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        # ✅ رد فوري عند الاستلام
         await update.message.reply_text("يا علي مدد")
 
         file = await update.message.video.get_file()
         await file.download_to_drive("input.mp4")
 
-        cmd = 'ffmpeg -i input.mp4 -i logo.png -filter_complex "[1:v]scale=200:-1,format=rgba,colorchannelmixer=aa=0.5[logo];[0:v][logo]overlay=(W-w)/2+20*sin(t*2):(H-h)/2+20*cos(t*2)" -c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p -c:a copy -y output.mp4'
+        cmd = 'ffmpeg -i input.mp4 -i logo.png -filter_complex "[1:v]scale=150:-1[logo];[0:v][logo]overlay=(W-w)/2:H-h-20" -c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p -c:a copy -y output.mp4'
 
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
@@ -38,7 +37,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file = await update.message.photo[-1].get_file()
         await file.download_to_drive("input.jpg")
 
-        cmd = 'ffmpeg -i input.jpg -i logo.png -filter_complex "[1:v]scale=200:-1,format=rgba,colorchannelmixer=aa=0.5[logo];[0:v][logo]overlay=(W-w)/2:(H-h)/2" -y output.jpg'
+        cmd = 'ffmpeg -i input.jpg -i logo.png -filter_complex "[1:v]scale=150:-1[logo];[0:v][logo]overlay=(W-w)/2:H-h-20" -y output.jpg'
 
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
@@ -56,7 +55,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(str(e))
 
 
-# تشغيل البوت
+# 🚀 تشغيل البوت
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 
 app.add_handler(MessageHandler(filters.VIDEO, handle_video))
