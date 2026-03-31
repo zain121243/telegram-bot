@@ -5,17 +5,42 @@ from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTyp
 # جلب التوكن من Railway
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+# معالجة الفيديو
 async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    file = await update.message.video.get_file()
-    await file.download_to_drive("input.mp4")
+    try:
+        file = await update.message.video.get_file()
+        await file.download_to_drive("input.mp4")
 
-    # إضافة حقوق على الفيديو
-    os.system('ffmpeg -i input.mp4 -vf "drawtext=text=MyBot:fontcolor=white:fontsize=24:x=10:y=H-th-10" output.mp4')
+        # إضافة الشعار على الفيديو
+        os.system('ffmpeg -i input.mp4 -i logo.png -filter_complex "overlay=W-w-10:H-h-10" -y output.mp4')
 
-    await update.message.reply_video(video=open("output.mp4", "rb"))
+        await update.message.reply_video(video=open("output.mp4", "rb"))
+
+    except Exception as e:
+        print("ERROR:", e)
+        await update.message.reply_text("صار خطأ ⚠️")
+
+# معالجة الصور
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        file = await update.message.photo[-1].get_file()
+        await file.download_to_drive("input.jpg")
+
+        # إضافة الشعار على الصورة
+        os.system('ffmpeg -i input.jpg -i logo.png -filter_complex "overlay=W-w-10:H-h-10" -y output.jpg')
+
+        await update.message.reply_photo(photo=open("output.jpg", "rb"))
+
+    except Exception as e:
+        print("ERROR:", e)
+        await update.message.reply_text("صار خطأ ⚠️")
 
 # تشغيل البوت
 app = ApplicationBuilder().token(BOT_TOKEN).build()
+
 app.add_handler(MessageHandler(filters.VIDEO, handle_video))
+app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+
+print("Bot is running...")
 
 app.run_polling()
