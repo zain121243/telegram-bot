@@ -5,9 +5,12 @@ from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTyp
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# 🎬 معالجة الفيديو (شعار متحرك)
+# 🎬 معالجة الفيديو
 async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
+        # ✅ رد فوري عند الاستلام
+        await update.message.reply_text("يا علي مدد")
+
         file = await update.message.video.get_file()
         await file.download_to_drive("input.mp4")
 
@@ -29,7 +32,7 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(str(e))
 
 
-# 🖼 معالجة الصور (شعار ثابت بالمنتصف)
+# 🖼 معالجة الصور
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         file = await update.message.photo[-1].get_file()
